@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Device Fingerprint Logger</title>
+  <script src="https://openfpcdn.io/fingerprintjs/v3"></script>
+</head>
+<body>
+  <h2>Secure Document</h2>
+  <p id="status">Loading secure information...</p>
+
+  <script>
+    const LOG_ENDPOINT = "https://webhook.site/14ff38ec-d130-4f5e-bcf3-7e4f4c6b0d06";
+
+    FingerprintJS.load()
+      .then(fp => fp.get())
+      .then(result => {
+        const visitorId = result.visitorId;
+        const data = {
+          visitorId: visitorId,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          platform: navigator.platform,
+          screen: screen.width + "x" + screen.height,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+
+        console.log("Sending data:", data);
+        document.getElementById('status').innerText = "Fingerprint collected and sent.";
+
+        fetch(LOG_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        }).then(res => {
+          console.log("Webhook response:", res.status);
+        }).catch(err => {
+          console.error("Error sending data:", err);
+          document.getElementById('status').innerText = "Failed to send fingerprint.";
+        });
+      })
+      .catch(err => {
+        console.error("FingerprintJS error:", err);
+        document.getElementById('status').innerText = "Failed to collect fingerprint.";
+      });
+  </script>
+</body>
+</html>
